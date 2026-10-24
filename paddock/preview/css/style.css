@@ -1,0 +1,606 @@
+@font-face {
+  font-family: "Barlow Condensed";
+  font-style: normal;
+  font-weight: 500;
+  src: url("../fonts/BarlowCondensed-500.woff2") format("woff2");
+  font-display: swap;
+}
+@font-face {
+  font-family: "Barlow Condensed";
+  font-style: normal;
+  font-weight: 600;
+  src: url("../fonts/BarlowCondensed-600.woff2") format("woff2");
+  font-display: swap;
+}
+@font-face {
+  font-family: "IBM Plex Mono";
+  font-style: normal;
+  font-weight: 300;
+  src: url("../fonts/IBMPlexMono-300.woff2") format("woff2");
+  font-display: swap;
+}
+@font-face {
+  font-family: "IBM Plex Mono";
+  font-style: normal;
+  font-weight: 400;
+  src: url("../fonts/IBMPlexMono-400.woff2") format("woff2");
+  font-display: swap;
+}
+
+:root {
+  --bg: #0B0C0D;
+  --bg-raise: #131517;
+  --line: #2B2F33;
+  --text: #E8EBED;
+  --text-dim: #8E979E;
+  --text-faint: #4D555B;
+  /* 2026-10-24 theme change, per Gavin + council decision: black/red base instead of
+     black/orange. Flash color intentionally is NOT a brighter red - same-hue-but-brighter
+     reads as "the accent turned up," not "something happened" (council: unanimous across
+     4 advisors). Went with a near-white "hot" color instead of green (an F1-start-lights
+     green was also considered) because red/green is the single worst color pair for
+     red-green color blindness, the most common form - white is distinct for every type of
+     color vision. NOT yet verified on the real TV at night brightness - do that before
+     calling this settled, the red-as-constant-ambient-color choice is a bigger swing than
+     orange was and deserves an eyes-on check. */
+  --accent: #D1392F;
+  --accent-soft: rgba(209, 57, 47, 0.18);
+  --flash: #FFF4EC;
+
+  --f-display: "Barlow Condensed", sans-serif;
+  --f-mono: "IBM Plex Mono", monospace;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  background: var(--bg);
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--f-display);
+  color: var(--text);
+}
+
+/* Fixed 1920x1080 design stage, scaled to fit the viewport. */
+#stage-outer {
+  width: 1920px;
+  height: 1080px;
+  transform-origin: center center;
+  position: relative;
+}
+
+#stage {
+  width: 1920px;
+  height: 1080px;
+  position: relative;
+  background: var(--bg);
+  overflow: hidden;
+}
+
+/* display:none on every inactive mode, not just opacity:0 - six full-screen mode
+   containers left in the render/compositing tree at once was a major, unnecessary
+   GPU memory cost on the real box (Phase 2 finding). JS toggles display during the
+   fade: display:block just before the opacity transition starts, display:none once
+   it finishes on the outgoing mode. */
+.mode {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 320ms ease;
+  display: none;
+}
+.mode.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+.reduced-motion .mode {
+  transition: opacity 150ms linear;
+}
+
+/* Safe area: 96px left/right, 54px top/bottom */
+.safe {
+  position: absolute;
+  left: 96px;
+  right: 96px;
+  top: 54px;
+  bottom: 54px;
+}
+
+.mode-letter {
+  position: absolute;
+  left: 96px;
+  top: 54px;
+  font-family: var(--f-mono);
+  font-weight: 400;
+  font-size: 32px;
+  color: var(--accent);
+  letter-spacing: 0.08em;
+  z-index: 3;
+}
+
+.lap-counter {
+  position: absolute;
+  right: 96px;
+  top: 54px;
+  font-family: var(--f-mono);
+  font-size: 28px;
+  color: var(--text-dim);
+  letter-spacing: 0.04em;
+  z-index: 3;
+}
+.lap-counter.flash { color: var(--accent); }
+
+/* ---------- Mode N: ambient ---------- */
+#mode-n .photo-layer {
+  position: absolute;
+  top: 0; right: 0; bottom: 0;
+  width: 65%;
+  overflow: hidden;
+  background: var(--bg);
+}
+#mode-n .photo-layer::before {
+  content: "";
+  position: absolute; inset: 0;
+  background:
+    linear-gradient(to top, rgba(11,12,13,0.82) 0%, rgba(11,12,13,0.35) 22%, transparent 42%),
+    linear-gradient(to right, var(--bg) 0%, rgba(11,12,13,0.55) 28%, rgba(11,12,13,0.2) 60%);
+  z-index: 2;
+}
+#mode-n .photo-layer img {
+  position: absolute;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 2500ms ease;
+  will-change: transform;
+}
+#mode-n .photo-layer img.visible { opacity: 1; }
+
+.plate-grid {
+  position: absolute;
+  top: 0; right: 0; bottom: 0; width: 65%;
+  background-image: repeating-linear-gradient(to bottom, var(--text-faint) 0, var(--text-faint) 1px, transparent 1px, transparent 60px);
+  opacity: 0.25;
+  display: none;
+}
+.plate-name {
+  position: absolute;
+  right: 48px; top: 50%;
+  transform: translateY(-50%);
+  font-family: var(--f-display);
+  font-weight: 600;
+  font-size: 220px;
+  line-height: 0.9;
+  color: var(--accent);
+  opacity: 0.10;
+  text-align: right;
+  text-transform: uppercase;
+  white-space: nowrap;
+  display: none;
+}
+.is-plate .plate-grid, .is-plate .plate-name { display: block; }
+.is-plate .photo-layer { display: none; }
+
+.circuit-wrap {
+  position: absolute;
+  left: 96px; top: 150px;
+  width: 560px; height: 300px;
+  z-index: 3;
+}
+.circuit-wrap svg { width: 100%; height: 100%; overflow: visible; }
+#circuit-base { stroke: var(--line); stroke-width: 2; fill: none; }
+#circuit-progress { stroke: var(--accent); stroke-width: 3; fill: none; }
+.circuit-dot {
+  r: 7;
+  fill: var(--accent);
+}
+.circuit-dot-glow { fill: var(--accent-soft); r: 22; }
+.sector-tick { stroke: var(--text-dim); stroke-width: 2; }
+.sector-tick.current { stroke: var(--accent); }
+.sector-label {
+  font-family: var(--f-mono);
+  font-size: 22px;
+  fill: var(--text-dim);
+}
+.sector-label.current { fill: var(--accent); }
+
+.clock-block {
+  position: absolute;
+  left: 96px; top: 476px;
+  z-index: 3;
+}
+.clock-time {
+  font-family: var(--f-mono);
+  font-weight: 300;
+  font-size: 280px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.clock-pm {
+  font-size: 48px;
+  color: var(--text-dim);
+  margin-left: 8px;
+}
+.clock-date {
+  font-family: var(--f-display);
+  font-weight: 500;
+  font-size: 36px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-top: 8px;
+}
+
+.car-caption {
+  position: absolute;
+  right: 96px; bottom: 140px;
+  text-align: right;
+  z-index: 3;
+  max-width: 900px;
+}
+.car-name {
+  font-family: var(--f-display);
+  font-weight: 600;
+  font-size: 44px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+.car-caption-line {
+  font-family: var(--f-mono);
+  font-size: 28px;
+  color: var(--text-dim);
+  margin-top: 6px;
+}
+.car-detail-line {
+  font-family: var(--f-mono);
+  font-size: 28px;
+  color: var(--text-dim);
+}
+
+.readout {
+  position: absolute;
+  bottom: 54px;
+  font-family: var(--f-mono);
+  font-size: 28px;
+  color: var(--text-dim);
+  letter-spacing: 0.04em;
+  z-index: 3;
+}
+.readout-left { left: 96px; }
+.readout-right { right: 96px; text-align: right; }
+.readout .status-ready { color: var(--text); }
+.readout .status-offline { color: var(--flash); }
+
+/* ---------- Mode D: drive ---------- */
+#mode-d .clock-block {
+  transform: scale(0.42);
+  transform-origin: top left;
+}
+#mode-d .circuit-wrap { display: none; }
+
+.focused-app {
+  position: absolute;
+  left: 0; right: 0;
+  top: 420px;
+  text-align: center;
+}
+.focused-app-name {
+  font-family: var(--f-display);
+  font-weight: 600;
+  font-size: 120px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+.focused-app-sub {
+  font-family: var(--f-mono);
+  font-size: 28px;
+  color: var(--text-dim);
+  margin-top: 8px;
+}
+
+.arc-baseline {
+  position: absolute;
+  inset: 0;
+  width: 1920px;
+  height: 1080px;
+  pointer-events: none;
+}
+#d-arc-baseline-path { stroke: var(--line); stroke-width: 2; }
+/* Tachometer dressing on the baseline arc, per Gavin's "more detail, more like a tachometer"
+   note (2026-10-24): a redline zone at the high end and minor graduation ticks between the
+   major ones. Styling on the gauge face itself, not a data readout - same footing as the
+   circuit outline, not an "invented spec" (rule 6 is about fake numbers, not instrument dressing). */
+#d-arc-redline-path { stroke: var(--accent); stroke-width: 3; opacity: 0.55; }
+#d-arc-minor-ticks { stroke: var(--text-faint); stroke-width: 1.5; }
+
+.arc-needle-glow {
+  position: absolute;
+  left: -35px; bottom: -35px; /* anchor at the stage's 0,0; JS positions it with transform */
+  width: 70px; height: 70px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--accent-soft) 0%, transparent 70%);
+  opacity: 0;
+  transition: transform 450ms cubic-bezier(.17,.89,.32,1.49), opacity 450ms ease;
+  pointer-events: none;
+}
+.arc-needle-glow.show { opacity: 1; }
+.reduced-motion .arc-needle-glow { display: none; }
+
+.arc-wrap {
+  position: absolute;
+  left: 0; right: 0;
+  bottom: 60px;
+  height: 260px;
+}
+.arc-tick-num {
+  font-family: var(--f-mono);
+  font-size: 18px;
+  color: var(--text-faint);
+  text-align: center;
+  margin-top: 2px;
+}
+.arc-tick.focused .arc-tick-num { color: var(--text-dim); }
+.arc-tick {
+  position: absolute;
+  bottom: 0;
+  width: 96px;
+  margin-left: -48px;
+  text-align: center;
+  transition: transform 160ms ease;
+}
+.arc-tick-icon {
+  position: relative;
+  width: 64px; height: 64px;
+  margin: 0 auto 10px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  font-family: var(--f-display);
+  font-weight: 600;
+  font-size: 28px;
+  color: #fff;
+  filter: grayscale(1) brightness(0.55);
+  opacity: 0.45;
+  transition: filter 160ms ease, opacity 160ms ease, transform 160ms ease;
+}
+.arc-tick.focused .arc-tick-icon {
+  filter: none;
+  opacity: 1;
+  transform: scale(1.25);
+}
+.arc-tick-img {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+}
+.arc-tick-label {
+  font-family: var(--f-display);
+  font-weight: 500;
+  font-size: 26px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.arc-tick.focused .arc-tick-label { color: var(--text); }
+
+/* The needle's true pivot is off-screen below, at the arc's radius (DESIGN.md 5.2).
+   This wrapper sits at that pivot point and rotates; the visible needle segment
+   (radius R-260 to R+10) is placed inside it at the matching offset, so the tip
+   sweeps through the same x positions as the arc ticks. */
+.arc-needle-pivot {
+  position: absolute;
+  left: 960px; bottom: -2310px;
+  width: 0; height: 0;
+  transform-origin: bottom center;
+  transition: transform 450ms cubic-bezier(.17,.89,.32,1.49);
+}
+.arc-needle {
+  position: absolute;
+  left: -2px; bottom: 2340px;
+  width: 4px; height: 270px;
+  background: linear-gradient(to top, var(--accent) 0%, var(--accent) 75%, var(--text-dim) 100%);
+  clip-path: polygon(20% 0%, 80% 0%, 100% 92%, 50% 100%, 0% 92%); /* tapered, gauge-needle shape */
+}
+.arc-needle-pivot-dot {
+  position: absolute;
+  left: -8px; bottom: 2332px;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: var(--bg-raise);
+  border: 2px solid var(--accent);
+}
+.arc-needle.flash { background: var(--flash); }
+
+.hold-menu {
+  position: absolute;
+  left: 50%; bottom: 300px;
+  transform: translateX(-50%);
+  background: var(--bg-raise);
+  border: 1px solid var(--line);
+  padding: 16px 28px;
+  font-family: var(--f-display);
+  font-size: 30px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  display: none;
+}
+.hold-menu.show { display: block; }
+.hold-menu span { color: var(--text-dim); margin-right: 24px; }
+.hold-menu span.sel { color: var(--accent); }
+
+/* ---------- Mode S: sport ---------- */
+#mode-s .left-pane {
+  position: absolute;
+  left: 0; top: 0; bottom: 0; width: 40%;
+  opacity: 0.35;
+}
+.wheel-list {
+  position: absolute;
+  right: 96px; top: 0; bottom: 0; width: 55%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 6px;
+}
+.wheel-row {
+  font-family: var(--f-display);
+  font-weight: 500;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  text-align: right;
+  transition: font-size 140ms ease, opacity 140ms ease, color 140ms ease;
+}
+.wheel-row.d0 { font-size: 72px; color: var(--text); font-weight: 600; }
+.wheel-row.d1 { font-size: 48px; opacity: 0.7; }
+.wheel-row.d2 { font-size: 36px; opacity: 0.4; }
+.wheel-row.dhide { opacity: 0; }
+.scroll-letter {
+  position: absolute;
+  left: 140px; top: 50%;
+  transform: translateY(-50%);
+  font-family: var(--f-display);
+  font-weight: 600;
+  font-size: 260px;
+  color: var(--accent-soft);
+  display: none;
+}
+.scroll-letter.show { display: block; }
+
+/* ---------- Showroom ---------- */
+#mode-showroom .photo-layer {
+  position: absolute; inset: 0;
+}
+#mode-showroom .photo-layer::before {
+  content: ""; position: absolute; inset: 0;
+  background: rgba(11,12,13,0.25);
+}
+#mode-showroom .photo-layer img {
+  position: absolute; width: 100%; height: 100%; object-fit: cover;
+  opacity: 0; transition: opacity 600ms ease;
+}
+#mode-showroom .photo-layer img.visible { opacity: 1; }
+.corner-bracket {
+  position: absolute;
+  width: 48px; height: 48px;
+  border-color: var(--text-dim);
+  opacity: 0.4;
+}
+.corner-tl { top: 48px; left: 48px; border-top: 2px solid; border-left: 2px solid; }
+.corner-tr { top: 48px; right: 48px; border-top: 2px solid; border-right: 2px solid; }
+.corner-bl { bottom: 48px; left: 48px; border-bottom: 2px solid; border-left: 2px solid; }
+.corner-br { bottom: 48px; right: 48px; border-bottom: 2px solid; border-right: 2px solid; }
+
+/* ---------- Mode P: park ---------- */
+#mode-p { background: #000000; }
+.park-clock {
+  position: absolute;
+  font-family: var(--f-mono);
+  font-weight: 300;
+  font-size: 96px;
+  color: var(--text);
+  opacity: 0.2;
+  transition: top 3000ms ease, left 3000ms ease;
+}
+
+/* ---------- Startup sweep ---------- */
+#startup-sweep {
+  position: absolute; inset: 0;
+  background: var(--bg);
+  z-index: 50;
+  opacity: 1;
+  pointer-events: none;
+}
+#startup-sweep.hidden { display: none; }
+.sweep-needle {
+  position: absolute;
+  bottom: 30px; left: 50%;
+  width: 3px; height: 260px;
+  background: var(--accent);
+  transform-origin: bottom center;
+}
+.sweep-tick {
+  position: absolute;
+  width: 4px; height: 20px;
+  background: var(--text-faint);
+}
+.sweep-tick.lit { background: var(--accent); }
+
+/* Flat-6 ignition, plays once with the startup sweep. Transform + opacity only, per the
+   motion rules - the piston stroke is a transform, the "fire" moment is an opacity fade
+   on a small overlay, nothing else animates. Two mirrored banks (top strokes down toward
+   the crank line, bottom strokes up toward it) reads as a boxer/flat engine, which fits
+   since most of the garage is Porsches. */
+.engine-anim {
+  position: absolute;
+  left: 50%; top: 150px;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+.engine-row { display: flex; gap: 18px; }
+.engine-crank-line {
+  width: 220px; height: 2px;
+  background: var(--line);
+  margin: 0 auto;
+}
+.piston {
+  position: relative;
+  width: 16px; height: 44px;
+  border: 2px solid var(--line);
+  overflow: hidden;
+}
+.piston-flash {
+  position: absolute; inset: 0;
+  background: var(--accent);
+  opacity: 0;
+}
+.engine-row-top .piston { animation: pistonStrokeDown 420ms ease-in-out both; }
+.engine-row-bottom .piston { animation: pistonStrokeUp 420ms ease-in-out both; }
+.engine-row-top .piston .piston-flash,
+.engine-row-bottom .piston .piston-flash { animation: pistonFlash 420ms ease-in-out both; }
+.engine-row-top .piston:nth-child(1), .engine-row-top .piston:nth-child(1) .piston-flash { animation-delay: 0ms; }
+.engine-row-bottom .piston:nth-child(1), .engine-row-bottom .piston:nth-child(1) .piston-flash { animation-delay: 70ms; }
+.engine-row-top .piston:nth-child(2), .engine-row-top .piston:nth-child(2) .piston-flash { animation-delay: 140ms; }
+.engine-row-bottom .piston:nth-child(2), .engine-row-bottom .piston:nth-child(2) .piston-flash { animation-delay: 210ms; }
+.engine-row-top .piston:nth-child(3), .engine-row-top .piston:nth-child(3) .piston-flash { animation-delay: 280ms; }
+.engine-row-bottom .piston:nth-child(3), .engine-row-bottom .piston:nth-child(3) .piston-flash { animation-delay: 350ms; }
+
+@keyframes pistonStrokeDown {
+  0% { transform: translateY(0); }
+  45% { transform: translateY(10px); }
+  100% { transform: translateY(0); }
+}
+@keyframes pistonStrokeUp {
+  0% { transform: translateY(0); }
+  45% { transform: translateY(-10px); }
+  100% { transform: translateY(0); }
+}
+@keyframes pistonFlash {
+  0%, 100% { opacity: 0; }
+  45% { opacity: 0.85; }
+}
+.reduced-motion .engine-anim { display: none; } /* reduced_motion skips the flourish entirely */
+
+/* Dev HUD, not part of the design: shows query-string state while iterating */
+#dev-hud {
+  position: fixed;
+  left: 8px; bottom: 8px;
+  font-family: monospace;
+  font-size: 11px;
+  color: #555;
+  z-index: 100;
+  pointer-events: none;
+}

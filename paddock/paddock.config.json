@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "clock": { "format": "12h", "show_seconds": false },
+  "favorites": [
+    "com.google.android.youtube.tv",
+    "com.apple.atve.androidtv.appletv",
+    "com.netflix.ninja",
+    "com.disney.disneyplus",
+    "com.amazon.amazonvideo.livingroom",
+    "org.xbmc.kodi",
+    "com.wbd.stream"
+  ],
+  "labels": {
+    "com.google.android.youtube.tv": "YouTube",
+    "com.apple.atve.androidtv.appletv": "Apple TV",
+    "com.netflix.ninja": "Netflix",
+    "com.disney.disneyplus": "Disney+",
+    "com.amazon.amazonvideo.livingroom": "Prime Video",
+    "org.xbmc.kodi": "Kodi",
+    "com.wbd.stream": "HBO Max"
+  },
+  "sublabels": {},
+  "night": { "start": "23:00", "end": "06:00", "park_after_idle_min": 30 },
+  "garage": { "showroom_advance_seconds": 12 },
+  "odometer": { "enabled": true },
+  "motion": { "reduced": false },
+  "accent": "#D1392F"
+}

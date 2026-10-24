@@ -1,0 +1,41 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.gavin.paddock'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId 'com.gavin.paddock'
+        minSdk 26
+        targetSdk 34
+        versionCode 1
+        versionName '1.0'
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            // Sideloaded over ADB, never published: sign with the debug key so it installs over a debug build.
+            signingConfig signingConfigs.debug
+        }
+    }
+
+    packagingOptions {
+        resources {
+            excludes += ['kotlin/**', 'META-INF/*.version', 'META-INF/*.kotlin_module', 'DebugProbesKt.bin']
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    implementation 'androidx.webkit:webkit:1.11.0'
+}

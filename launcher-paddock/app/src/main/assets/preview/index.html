@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>PADDOCK preview</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="stage-outer">
+  <div id="stage">
+
+    <!-- Mode N: ambient -->
+    <div id="mode-n" class="mode">
+      <div class="mode-letter">N</div>
+      <div class="lap-counter" id="n-lap-counter">LAP 1 / 24</div>
+
+      <div class="photo-layer" id="n-photo-layer"></div>
+      <div class="plate-grid"></div>
+      <div class="plate-name" id="n-plate-name"></div>
+
+      <div class="circuit-wrap">
+        <svg viewBox="0 0 560 300">
+          <path id="circuit-base" d=""></path>
+          <path id="circuit-progress" d="" stroke-dasharray="0" stroke-dashoffset="0"></path>
+          <line id="tick-s1" class="sector-tick"></line>
+          <line id="tick-s2" class="sector-tick"></line>
+          <text id="label-s1" class="sector-label">S1</text>
+          <text id="label-s2" class="sector-label">S2</text>
+          <text id="label-s3" class="sector-label">S3</text>
+          <circle id="dot-glow" class="circuit-dot-glow"></circle>
+          <circle id="dot" class="circuit-dot"></circle>
+        </svg>
+      </div>
+
+      <div class="clock-block">
+        <div class="clock-time" id="n-time">5:42<span class="clock-pm">PM</span></div>
+        <div class="clock-date" id="n-date">FRI OCT 23</div>
+      </div>
+
+      <div class="car-caption">
+        <div class="car-name" id="n-car-name">CAR NAME</div>
+        <div class="car-caption-line" id="n-car-caption"></div>
+        <div class="car-detail-line" id="n-car-line0"></div>
+        <div class="car-detail-line" id="n-car-line1"></div>
+      </div>
+
+      <div class="readout readout-left" id="n-odo">ODO 0 LAPS</div>
+      <div class="readout readout-right" id="n-net">ETH READY</div>
+    </div>
+
+    <!-- Mode D: drive -->
+    <div id="mode-d" class="mode">
+      <div class="mode-letter">D</div>
+      <div class="lap-counter" id="d-lap-counter">LAP 1 / 24</div>
+
+      <div class="clock-block">
+        <div class="clock-time" id="d-time">5:42</div>
+      </div>
+
+      <div class="focused-app">
+        <div class="focused-app-name" id="d-app-name">APP</div>
+        <div class="focused-app-sub" id="d-app-sub"></div>
+      </div>
+
+      <svg id="d-arc-baseline" class="arc-baseline" viewBox="0 0 1920 1080">
+        <path id="d-arc-baseline-path" fill="none" />
+        <path id="d-arc-redline-path" fill="none" />
+        <path id="d-arc-minor-ticks" fill="none" />
+      </svg>
+      <div class="arc-wrap" id="d-arc"></div>
+      <div class="arc-needle-glow" id="d-needle-glow"></div>
+      <div class="arc-needle-pivot" id="d-needle-pivot">
+        <div class="arc-needle" id="d-needle"></div>
+        <div class="arc-needle-pivot-dot"></div>
+      </div>
+
+      <div class="hold-menu" id="d-hold-menu">
+        <span id="hold-move">MOVE</span><span id="hold-remove">REMOVE</span>
+      </div>
+    </div>
+
+    <!-- Mode S: sport / all apps -->
+    <div id="mode-s" class="mode">
+      <div class="mode-letter">S</div>
+      <div class="lap-counter" id="s-lap-counter">LAP 1 / 24</div>
+      <div class="left-pane">
+        <div class="clock-block" style="transform:scale(.42);transform-origin:top left;">
+          <div class="clock-time" id="s-time">5:42</div>
+        </div>
+      </div>
+      <div class="wheel-list" id="s-wheel"></div>
+      <div class="scroll-letter" id="s-scroll-letter"></div>
+    </div>
+
+    <!-- Showroom -->
+    <div id="mode-showroom" class="mode">
+      <div class="photo-layer" id="showroom-photo-layer"></div>
+      <div class="corner-bracket corner-tl"></div>
+      <div class="corner-bracket corner-tr"></div>
+      <div class="corner-bracket corner-bl"></div>
+      <div class="corner-bracket corner-br"></div>
+      <div class="car-caption" style="left:96px;right:auto;text-align:left;bottom:80px;">
+        <div class="car-name" id="showroom-car-name">CAR NAME</div>
+        <div class="car-caption-line" id="showroom-car-caption"></div>
+      </div>
+    </div>
+
+    <!-- Mode P: park / night -->
+    <div id="mode-p" class="mode">
+      <div class="park-clock" id="p-clock" style="top:45%;left:45%;">5:42</div>
+    </div>
+
+    <!-- Startup sweep overlay -->
+    <div id="startup-sweep" class="hidden">
+      <!-- Flat-6 ignition: plays once on cold start / wake from long sleep, same slot and
+           budget as the needle self-test it runs alongside. Never loops, never appears on
+           the ambient screen - council review (2026-10-24): an idling engine would be
+           exactly the "decorative loop" DESIGN.md bans, but a one-shot triggered animation
+           in the already-sanctioned startup-sweep slot is not. -->
+      <div class="engine-anim" id="engine-anim">
+        <div class="engine-row engine-row-top">
+          <div class="piston"><div class="piston-flash"></div></div>
+          <div class="piston"><div class="piston-flash"></div></div>
+          <div class="piston"><div class="piston-flash"></div></div>
+        </div>
+        <div class="engine-crank-line"></div>
+        <div class="engine-row engine-row-bottom">
+          <div class="piston"><div class="piston-flash"></div></div>
+          <div class="piston"><div class="piston-flash"></div></div>
+          <div class="piston"><div class="piston-flash"></div></div>
+        </div>
+      </div>
+      <div id="sweep-ticks"></div>
+      <div class="sweep-needle" id="sweep-needle"></div>
+    </div>
+
+  </div>
+</div>
+
+<div id="dev-hud"></div>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

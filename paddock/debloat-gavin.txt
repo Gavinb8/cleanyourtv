@@ -1,0 +1,48 @@
+# PADDOCK debloat list for Gavin's onn. 4K Plus Streaming (device coffey, Amlogic S905X5M), 2 GB RAM.
+# Based on examples/onn-4k-plus-2025/debloat.txt (same exact build: URO4.260304.011.B1.15051976),
+# with the apps Gavin actually uses kept enabled. DRAFT, not yet applied. See that file for full
+# notes on quirks (setupwraith/Wi-Fi, remote button routing, voice mic, screensaver).
+#
+# Apply:   TV_HOST=<ip> tools/disable.sh paddock/debloat-gavin.txt
+# Undo:    TV_HOST=<ip> tools/restore.sh paddock/debloat-gavin.txt com.google.android.apps.tv.launcherx
+# Everything is DISABLED, not uninstalled. Comment out any line you want to keep.
+
+# Telemetry and feedback
+com.google.android.feedback
+com.android.tv.feedbackconsent
+
+# Privacy Sandbox / federated learning. Play Store and voice search still work with them off.
+com.android.adservices.api
+com.android.ondevicepersonalization.services
+com.android.federatedcompute.services
+
+# Preloaded apps
+com.google.android.play.games
+com.android.printspooler
+com.google.android.marvin.talkback              # re-enable if you need the screen reader
+
+# Google ambient mode screensaver (replaced by the launcher's Clock screensaver)
+com.google.android.apps.tv.dreamx
+
+# Gavin uses these, so they stay enabled (kept, not disabled):
+# com.google.android.youtube.tv                 # YouTube - his #1 most used app
+# com.netflix.ninja                             # Netflix - top 3 most used
+# com.netflix.tokenmanager                       # Netflix partner token service, needed for Netflix
+# com.google.android.apps.mediashell             # Chromecast built-in - kept for casting Apple Music from phone
+
+# Decided: not used, disable these too
+com.google.android.youtube.tvmusic              # YouTube Music - Apple Music (via casting) covers this instead
+com.google.android.youtube.tvunplugged          # YouTube TV (live TV subscription app) - not used
+com.instagram.airwave                           # Instagram for TV - not used
+com.cbs.ott                                     # Paramount+ - not used
+com.haystack.android                            # Haystack News - not used
+
+# Stock home. launcher/build-and-install.sh disables launcherx itself once the new launcher is installed
+# and verified, and restore.sh re-enables it; setupwraith has to go too (its RecoveryActivity takes Home),
+# so it stays in the list for restore.sh to bring back.
+# com.google.android.apps.tv.launcherx
+com.google.android.tungsten.setupwraith  # Wi-Fi rejoined 2026-10-23, no longer owns the saved network
+
+# Quirk from the tested list: the Wi-Fi network saved during first setup belongs to setupwraith.
+# Forget and re-join it in Settings > Network & Internet BEFORE disabling setupwraith, or the box
+# drops off Wi-Fi (and ADB) when it goes. Re-check with: dumpsys wifi | grep -o 'cname=[^ ]*'

@@ -1,0 +1,21 @@
+# Phase 4 hardening: screensaver/sleep settings changed on 2026-10-24, approved by Gavin.
+# PADDOCK has its own night-dim behavior (DESIGN.md section 8, Park mode) and is meant to stay
+# on screen all day, so the system's own screensaver and sleep timeout are turned off/extended.
+#
+# Original values (restore with the commands below if ever needed):
+#   screensaver_enabled (secure)    = 1
+#   screensaver_components (secure) = null
+#   screen_off_timeout (system)     = 600000   (10 minutes - this is what put the screen to
+#                                                sleep mid-session twice on 2026-10-23/24)
+#   stay_on_while_plugged_in (global) = 0
+#
+# To restore the original values:
+#   adb shell settings put secure screensaver_enabled 1
+#   adb shell settings delete secure screensaver_components
+#   adb shell settings put system screen_off_timeout 600000
+#   adb shell settings put global stay_on_while_plugged_in 0
+#
+# New values applied:
+#   screensaver_enabled = 0 (system screensaver fully off)
+#   screen_off_timeout = 2147483647 (max int, effectively never - PADDOCK's own Park mode
+#                                     handles dimming overnight instead)

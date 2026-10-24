@@ -1,0 +1,46 @@
+{
+  "cars": [
+    {
+      "id": "s4",
+      "name": "Audi S4",
+      "caption": "",
+      "lines": [],
+      "photos": [
+        "s4-green-front34.jpg",
+        "s4-lake-front34.jpg",
+        "s4-sunset-lot.jpg",
+        "s4-dusk-headlights.jpg",
+        "s4-night-headlights.jpg",
+        "s4-taillights-dusk.jpg",
+        "s4-light-painting.jpg",
+        "s4-yellow-fogs.jpg",
+        "s4-park-road.jpg"
+      ],
+      "focus": { "x": 0.5, "y": 0.5 }
+    },
+    {
+      "id": "porsche-718",
+      "name": "Porsche 718",
+      "caption": "",
+      "lines": [],
+      "photos": ["porsche-718-showroom.jpg"],
+      "focus": { "x": 0.5, "y": 0.5 }
+    },
+    {
+      "id": "porsche-918",
+      "name": "Porsche 918",
+      "caption": "",
+      "lines": [],
+      "photos": ["porsche-918-engine.jpg"],
+      "focus": { "x": 0.5, "y": 0.5 }
+    },
+    {
+      "id": "porsche-964",
+      "name": "Porsche 964",
+      "caption": "",
+      "lines": [],
+      "photos": ["porsche-964-blue.jpg"],
+      "focus": { "x": 0.5, "y": 0.5 }
+    }
+  ]
+}

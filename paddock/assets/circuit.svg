@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 300">
+  <!-- Original closed circuit shape for PADDOCK. Not traced from any real track -
+       hand-drawn, long and winding in spirit (lots of corners, like a technical
+       circuit through hilly terrain), never copied from a real track's layout art.
+       One long weaving straight (top), one esses section (right side), one tight
+       hairpin (bottom), a second weaving section (lower return). ~22 corners. -->
+  <path id="circuit-path" fill="none" d="
+    M 48,64
+    C 90,46 130,70 170,52
+    C 210,34 250,68 290,50
+    C 320,40 350,62 378,54
+    C 412,55 432,60 448,76
+    C 462,90 466,106 460,124
+    C 455,140 452,150 460,164
+    C 470,182 492,186 498,204
+    C 504,222 492,236 472,244
+    C 452,252 452,258 466,270
+    C 476,278 470,290 452,290
+    C 420,290 400,276 404,258
+    C 408,240 392,232 368,236
+    C 340,250 310,226 280,248
+    C 250,270 220,240 190,258
+    C 160,276 140,244 120,256
+    C 92,249 70,246 58,228
+    C 46,210 50,192 60,178
+    C 70,164 68,148 56,136
+    C 44,124 40,108 42,92
+    C 43,82 44,72 48,64
+    Z" />
+</svg>

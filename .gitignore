@@ -5,6 +5,15 @@ launcher/.gradle/
 launcher/build/
 launcher/app/build/
 launcher/local.properties
+launcher-paddock/.gradle/
+launcher-paddock/build/
+launcher-paddock/app/build/
+launcher-paddock/local.properties
+paddock/spike/
+# ad-hoc tools/bench.py dumps (hold the box's IP in "host"); paddock/baseline.json is the one
+# intentional, IP-redacted deliverable and stays tracked.
+paddock/result.json
+paddock/spike-test/
 # your own TV's dumps (serial, android_id, device names) stay local
 backup/
 # session screenshots and working notes (may show the Wi-Fi name or account avatar) stay local
@@ -19,3 +28,10 @@ traces/
 *.aab
 launcher/hs_err_pid*.log
 launcher/replay_pid*.log
+
+# PADDOCK: Gavin's own car photos (originals and prepped) never get committed.
+paddock/assets/cars-src/
+paddock/assets/photos-prepped/
+paddock/preview/shots/
+paddock/preview/files/paddock/photos/
+launcher-paddock/app/src/main/assets/preview/files/paddock/photos/

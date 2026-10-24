@@ -1,0 +1,5 @@
+# Phase 3 handoff: disable the Phase 0 baseline launcher (com.gathin.tvhome) now that
+# com.gavin.paddock is confirmed working and resolves HOME correctly.
+# Apply: TV_HOST=<ip> tools/disable.sh paddock/paddock-handoff.txt
+# Undo:  TV_HOST=<ip> tools/restore.sh paddock/paddock-handoff.txt com.gavin.paddock
+com.gathin.tvhome
