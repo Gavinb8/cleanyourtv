@@ -127,6 +127,7 @@ body {
 }
 
 .lap-counter {
+  display: none; /* removed per Gavin, 2026-10-24: "isn't really needed" */
   position: absolute;
   right: 96px;
   top: 54px;
@@ -240,6 +241,8 @@ body {
 }
 
 .car-caption {
+  display: none; /* removed per Gavin, 2026-10-25: "get rid of the text in the bottom right
+    for each of the images" (car name/caption/detail lines on the ambient N-mode photo) */
   position: absolute;
   right: 96px; bottom: 140px;
   text-align: right;
@@ -275,7 +278,7 @@ body {
   z-index: 3;
 }
 .readout-left { left: 96px; }
-.readout-right { right: 96px; text-align: right; }
+.readout-right { display: none; right: 96px; text-align: right; } /* removed per Gavin, 2026-10-24 */
 .readout .status-ready { color: var(--text); }
 .readout .status-offline { color: var(--flash); }
 
@@ -283,13 +286,26 @@ body {
 #mode-d .clock-block {
   transform: scale(0.42);
   transform-origin: top left;
+  /* 2026-10-25: the council's taller/deeper arc (ARC_BOTTOM_AT_CENTER 610, vs. 290 before)
+     now reaches up into where the small corner clock used to sit undisturbed - confirmed on
+     the real device (clock overlapping an arc tick) and again from Gavin directly ("the clock
+     is kind of obscuring the arc"). D mode already hides the circuit (.circuit-wrap, top:150
+     normally - rule above), so that's empty, already-reserved space: reuse its exact slot
+     instead of inventing a new offset. (An earlier attempt at this used top:-380px, which
+     pushed the clock fully off-canvas - wrong fix, corrected here before it reached Gavin.) */
+  top: 150px;
 }
 #mode-d .circuit-wrap { display: none; }
 
 .focused-app {
   position: absolute;
   left: 0; right: 0;
-  top: 420px;
+  /* 2026-10-25: the council's deeper dial (ARC_BOTTOM_AT_CENTER 610, focused-icon scale 1.22)
+     pushes the center tick's icon up to roughly y=310 from the top at its tallest - moved this
+     up from 340 (then still 420 before that) to clear it with margin, rather than re-tuning
+     this same offset a third time against the icon height. If ARC_BOTTOM_AT_CENTER or the
+     focused-tick icon size change again, re-check this clears the new icon top. */
+  top: 90px;
   text-align: center;
 }
 .focused-app-name {
@@ -321,6 +337,12 @@ body {
 #d-arc-redline-path { stroke: var(--accent); stroke-width: 3; opacity: 0.55; }
 #d-arc-minor-ticks { stroke: var(--text-faint); stroke-width: 1.5; }
 
+/* Reactive light trail: double flat stroke (halo wide/dim, core thin/bright) fakes a glow
+   with zero blur/filter cost (council, re: the project's own past GPU memory bug). Both
+   start empty (stroke-dasharray 0) and are only ever given a path by JS on a real keypress. */
+#d-arc-trail-halo { stroke: var(--accent); stroke-width: 13; opacity: 0.25; }
+#d-arc-trail-core { stroke: var(--accent); stroke-width: 3; opacity: 0.9; }
+
 .arc-needle-glow {
   position: absolute;
   left: -35px; bottom: -35px; /* anchor at the stage's 0,0; JS positions it with transform */
@@ -337,37 +359,38 @@ body {
 .arc-wrap {
   position: absolute;
   left: 0; right: 0;
-  bottom: 60px;
-  height: 260px;
+  bottom: 0; /* was 60 - removed so ARC_BOTTOM_AT_CENTER in app.js (610) is the exact absolute
+    screen-bottom distance the council specified, not +60 on top of it */
+  height: 420px; /* was 260 - taller to match the deeper arc (council geometry redesign) */
 }
 .arc-tick-num {
   font-family: var(--f-mono);
-  font-size: 18px;
+  font-size: 20px;
   color: var(--text-faint);
   text-align: center;
-  margin-top: 2px;
+  margin-top: 4px;
 }
 .arc-tick.focused .arc-tick-num { color: var(--text-dim); }
 .arc-tick {
   position: absolute;
   bottom: 0;
-  width: 96px;
-  margin-left: -48px;
+  width: 132px;
+  margin-left: -66px;
   text-align: center;
   transition: transform 160ms ease;
 }
 .arc-tick-icon {
   position: relative;
-  width: 64px; height: 64px;
-  margin: 0 auto 10px;
-  border-radius: 10px;
+  width: 98px; height: 98px; /* was 64 - couch-legible at the new, deeper arc geometry */
+  margin: 0 auto 12px;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
   font-family: var(--f-display);
   font-weight: 600;
-  font-size: 28px;
+  font-size: 40px;
   color: #fff;
   filter: grayscale(1) brightness(0.55);
   opacity: 0.45;
@@ -376,45 +399,58 @@ body {
 .arc-tick.focused .arc-tick-icon {
   filter: none;
   opacity: 1;
-  transform: scale(1.25);
+  transform: scale(1.22);
 }
 .arc-tick-img {
   position: absolute; inset: 0;
   width: 100%; height: 100%;
   object-fit: cover;
 }
-.arc-tick-label {
-  font-family: var(--f-display);
-  font-weight: 500;
-  font-size: 26px;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--text-dim);
-}
-.arc-tick.focused .arc-tick-label { color: var(--text); }
+/* Hidden, 2026-10-25: at the council-widened geometry, every tick's own label (not just the
+   focused one) rendered at once, and a 2-word name like "Prime Video" wrapped to 2 lines and
+   sat directly behind whatever the big center focused-app-name was - the exact collision
+   Gavin reported. The big name already says which app is focused; per-tick labels for the
+   other 8 apps were redundant text clutter anyway, and removing them (icon + position number
+   only, like a real gauge) reads MORE like an instrument cluster, not less - fixes the
+   collision at the root instead of re-tuning pixel offsets against it again later. */
+.arc-tick-label { display: none; }
 
-/* The needle's true pivot is off-screen below, at the arc's radius (DESIGN.md 5.2).
+/* The needle's true pivot is off-screen below, at the arc's radius (ARC_RADIUS in app.js).
    This wrapper sits at that pivot point and rotates; the visible needle segment
-   (radius R-260 to R+10) is placed inside it at the matching offset, so the tip
-   sweeps through the same x positions as the arc ticks. */
+   (radius R-330 to R+15) is placed inside it at the matching offset, so the tip
+   sweeps through the same x positions as the arc ticks.
+   Numbers below match the 2026-10-25 council geometry redesign: ARC_RADIUS 1300,
+   ARC_BOTTOM_AT_CENTER 610 -> pivot bottom = -(1300-610) = -690. Needle base R-330=970,
+   length 345 (R-330 to R+15). If those two constants in app.js ever change, these four
+   values (pivot bottom, needle bottom/height, pivot-dot bottom) must be recomputed to match -
+   they're plain CSS, not derived from the JS constants. */
 .arc-needle-pivot {
   position: absolute;
-  left: 960px; bottom: -2310px;
+  left: 960px; bottom: -690px;
   width: 0; height: 0;
   transform-origin: bottom center;
-  transition: transform 450ms cubic-bezier(.17,.89,.32,1.49);
+  transition: transform 230ms cubic-bezier(0.34, 1.56, 0.64, 1); /* overshoot-and-settle, not a
+    plain ease - council (First Principles): "a needle that overshoots and settles reads as
+    mass on a pivot; one that snaps linearly reads as software." Zero new elements, same
+    transform:rotate on the same keypress - highest wow-per-cost item in the whole redesign. */
 }
 .arc-needle {
   position: absolute;
-  left: -2px; bottom: 2340px;
-  width: 4px; height: 270px;
+  left: -3.5px; bottom: 690px; /* was 970 - Gavin, 2026-10-25: needle's hub end was floating in
+    empty space above the true screen bottom. 690 = pivot's own -690 offset cancelled out, so
+    the hub now sits exactly on the screen's bottom edge, anchored instead of floating. */
+  width: 7px; height: 625px; /* was 4x270, then 7x345 - height grew by the same 280px the bottom
+    offset dropped, so the TOP end (the tip, already correctly reaching up near the focused
+    tick) stays exactly where it was; only the bottom end extends down to meet the screen edge. */
   background: linear-gradient(to top, var(--accent) 0%, var(--accent) 75%, var(--text-dim) 100%);
   clip-path: polygon(20% 0%, 80% 0%, 100% 92%, 50% 100%, 0% 92%); /* tapered, gauge-needle shape */
 }
 .arc-needle-pivot-dot {
   position: absolute;
-  left: -8px; bottom: 2332px;
-  width: 16px; height: 16px;
+  left: -10px; bottom: 680px; /* was 960, matches the needle's new bottom-690 by the same -10
+    relationship as before (hub sits right at the needle's new screen-edge-anchored end) */
+  width: 20px; height: 20px; /* was 16 - a static needle hub reads as "needle on a pivot"
+    rather than "arrow"; cheapest, highest-return single shape per the council */
   border-radius: 50%;
   background: var(--bg-raise);
   border: 2px solid var(--accent);
@@ -594,8 +630,12 @@ body {
 }
 .reduced-motion .engine-anim { display: none; } /* reduced_motion skips the flourish entirely */
 
-/* Dev HUD, not part of the design: shows query-string state while iterating */
+/* Dev HUD, not part of the design: shows query-string state while iterating. Hidden unless
+   ?debug=1 is on the URL - this was showing on the real box as confusing unexplained gray
+   text (Gavin, 2026-10-24): it got bundled into the real launcher's assets along with
+   everything else and nothing ever hid it there, since the box never has query params. */
 #dev-hud {
+  display: none;
   position: fixed;
   left: 8px; bottom: 8px;
   font-family: monospace;

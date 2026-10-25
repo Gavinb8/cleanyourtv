@@ -67,6 +67,19 @@
         <path id="d-arc-redline-path" fill="none" />
         <path id="d-arc-minor-ticks" fill="none" />
       </svg>
+      <!-- Reactive light trail (council redesign, 2026-10-25): fires only on a Left/Right
+           keypress that actually moves the needle, sweeping the exact angular delta just
+           traveled. Two flat-colored strokes (core + halo) fake a glow without a
+           repaint-triggering filter/box-shadow - this project already measured a GPU memory
+           regression from composited-layer cost once (Phase 2), so the trail is built cheap
+           from the start rather than fixed after the fact. One persistent node, retargeted and
+           .animate()-cancelled on each keypress - never created/destroyed per press, never
+           cleaned up via transitionend (that exact pattern already proved unreliable under
+           rapid interruption elsewhere in this project). -->
+      <svg id="d-arc-trail" class="arc-baseline" viewBox="0 0 1920 1080">
+        <path id="d-arc-trail-halo" fill="none" />
+        <path id="d-arc-trail-core" fill="none" />
+      </svg>
       <div class="arc-wrap" id="d-arc"></div>
       <div class="arc-needle-glow" id="d-needle-glow"></div>
       <div class="arc-needle-pivot" id="d-needle-pivot">

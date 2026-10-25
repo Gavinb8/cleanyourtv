@@ -341,11 +341,22 @@ function checkGarageRotation() {
 }
 
 // ---------- D mode: arc + needle ----------
-// DESIGN.md 5.2: "radius 2600, spans plus and minus 20 degrees around vertical.
-// The arc top sits near y 790, ends near y 950."
-const ARC_SPREAD_DEG = 40;
-const ARC_RADIUS = 2600;
-const ARC_BOTTOM_AT_CENTER = 1080 - 790; // design's "arc top sits near y 790" -> bottom 290
+// Redesigned 2026-10-25 per a 5-advisor council review (Gavin: "bland... needs to be more
+// alive, more responsive, bolder, more clearly car-related"). The council's unanimous finding,
+// independently re-derived four ways: the old geometry (radius 2600, +-20 deg) wasn't bland
+// because it was small - the sagitta (how much the arc actually bows) was only
+// 2600*(1-cos20deg) ~= 157px, so it read as a nearly-flat sagging line no matter how big the
+// canvas around it was. The fix is radius DOWN and angle UP, not "scale everything up" (which
+// would have made it an even flatter, bigger line - the opposite of the ask).
+const ARC_SPREAD_DEG = 76; // was 40 (+-20deg) -> now +-38deg: real sweep, and ~3x the angular
+                            // travel per tick, which alone reads as more responsive
+const ARC_RADIUS = 1300; // was 2600
+const ARC_BOTTOM_AT_CENTER = 610; // was 290 - gauge footprint goes from ~27% to ~57% of screen height
+// The rim/track line is drawn on a WIDER angle than the icons sit on, and is allowed to run
+// off the left/right canvas edges - a real dial implies it continues past what you can see.
+// Same stroke, same draw call, zero extra render cost (council: "the single cheapest
+// 'dominates the room' trick available").
+const ARC_RIM_SPREAD_DEG = ARC_SPREAD_DEG + 24;
 function angleForIndex(i, n) {
   return -ARC_SPREAD_DEG / 2 + (ARC_SPREAD_DEG * i) / (n - 1 || 1);
 }
@@ -423,10 +434,14 @@ function arcPathBetween(a0, a1, steps) {
 }
 function drawArcBaseline(n) {
   const half = ARC_SPREAD_DEG / 2;
-  document.getElementById("d-arc-baseline-path").setAttribute("d", arcPathBetween(-half, half, 40));
+  const rimHalf = ARC_RIM_SPREAD_DEG / 2;
+  // Rim drawn wider than the icon sweep and left to bleed past the canvas edges (see
+  // ARC_RIM_SPREAD_DEG above) - also quietly hedges against TV overscan cropping, since a
+  // dial that's "supposed to" run off-frame reads as intentional rather than broken.
+  document.getElementById("d-arc-baseline-path").setAttribute("d", arcPathBetween(-rimHalf, rimHalf, 40));
 
   // Redline zone: the last ~15% of the sweep, like the red arc on a real tach's high end.
-  document.getElementById("d-arc-redline-path").setAttribute("d", arcPathBetween(half * 0.7, half, 10));
+  document.getElementById("d-arc-redline-path").setAttribute("d", arcPathBetween(half * 0.7, rimHalf, 10));
 
   // Minor graduation ticks between each pair of major ticks - gauge-face detail, no new data.
   let minorD = "";
@@ -442,20 +457,67 @@ function drawArcBaseline(n) {
   }
   document.getElementById("d-arc-minor-ticks").setAttribute("d", minorD.trim());
 }
+// Reactive light trail (council, 2026-10-25): sweeps the exact angular delta the needle just
+// traveled. Two persistent, reused <path> elements (never created/destroyed per press) -
+// retargeted and re-animated via the Web Animations API, which has an explicit numeric
+// duration and needs no transitionend listener (that exact cleanup pattern already proved
+// unreliable under rapid interruption elsewhere in this project - see
+// troubleshooting/webview-display-none-vs-transitionend-memory.md).
+function triggerArcTrail(oldAngle, newAngle) {
+  if (REDUCED) return;
+  const halo = document.getElementById("d-arc-trail-halo");
+  const core = document.getElementById("d-arc-trail-core");
+  const d = arcPathBetween(oldAngle, newAngle, 24);
+  [halo, core].forEach(el => {
+    el.setAttribute("d", d);
+    if (el._trailAnim) el._trailAnim.cancel();
+    const len = el.getTotalLength();
+    el.style.strokeDasharray = `${len}`;
+    el._trailAnim = el.animate(
+      [
+        { strokeDashoffset: len, opacity: 1 },
+        { strokeDashoffset: 0, opacity: 1, offset: 0.45 },
+        { strokeDashoffset: 0, opacity: 0, offset: 1 }
+      ],
+      { duration: 380, easing: "cubic-bezier(.17,.89,.32,1.49)", fill: "forwards" }
+    );
+  });
+}
+// End-stop cue: a key press that can't move further gets its own distinct nudge, so it's
+// never mistaken for a real move (council: firing the trail on a non-move is "the fastest
+// way to make the effect feel random/ambient rather than caused").
+function rubberBandNudge(dir) {
+  if (REDUCED || !dir) return;
+  const base = angleForIndex(dFocus, dApps.length);
+  if (d_needle_pivot._rubberAnim) d_needle_pivot._rubberAnim.cancel();
+  d_needle_pivot._rubberAnim = d_needle_pivot.animate(
+    [
+      { transform: `rotate(${base}deg)` },
+      { transform: `rotate(${base + dir * 6}deg)`, offset: 0.4 },
+      { transform: `rotate(${base}deg)` }
+    ],
+    { duration: 160, easing: "ease-out" }
+  );
+}
 function setFocus(i, skipAnim) {
-  dFocus = Math.max(0, Math.min(dApps.length - 1, i));
+  const n = dApps.length;
+  const target = Math.max(0, Math.min(n - 1, i));
+  if (!skipAnim && target === dFocus) { rubberBandNudge(i > dFocus ? 1 : i < dFocus ? -1 : 0); return; }
+  const oldAngle = angleForIndex(dFocus, n);
+  dFocus = target;
   const ticks = document.querySelectorAll("#d-arc .arc-tick");
   ticks.forEach((t, idx) => t.classList.toggle("focused", idx === dFocus));
   const app = dApps[dFocus];
   d_app_name.textContent = app.label;
   d_app_sub.textContent = CONFIG.sublabels[app.pkg] || app.sub || "";
-  const angle = angleForIndex(dFocus, dApps.length);
+  const angle = angleForIndex(dFocus, n);
   d_needle_pivot.style.transform = `rotate(${angle}deg)`;
+  if (!skipAnim) triggerArcTrail(oldAngle, angle);
 
   // "Red light motion" (Gavin, 2026-10-24): a soft accent glow that travels to the newly
   // focused tick with the needle, triggered by the key press that moved it - not an ambient
   // loop, transform + opacity only.
-  const pos = arcPosition(dFocus, dApps.length);
+  const pos = arcPosition(dFocus, n);
   d_needle_glow.style.transform = `translate(${pos.x}px, ${-pos.bottom}px)`;
   d_needle_glow.classList.add("show");
   clearTimeout(setFocus._glowTimer);
@@ -793,8 +855,11 @@ async function boot() {
     playStartupSweep();
   }
 
-  document.getElementById("dev-hud").textContent =
-    `mode=${mode}  time override=${qs.get("time") || "none"}  reduced=${REDUCED}`;
+  if (qs.get("debug") === "1") {
+    const hud = document.getElementById("dev-hud");
+    hud.style.display = "block";
+    hud.textContent = `mode=${mode}  time override=${qs.get("time") || "none"}  reduced=${REDUCED}`;
+  }
 }
 
 // Pressing the physical Home button while already in Paddock re-delivers the HOME intent

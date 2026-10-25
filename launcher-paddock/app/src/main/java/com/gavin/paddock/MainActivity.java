@@ -114,7 +114,11 @@ public class MainActivity extends Activity {
                     okHoldFired = true;
                     sendKey("okHold");
                 }
-            } else {
+            } else if (event.getRepeatCount() == 0) {
+                // Bug found 2026-10-24: this used to fire on every repeat a held button sends,
+                // so holding Down even briefly cascaded through N->D->S in one motion ("glitches
+                // out" - Gavin). Each physical press is one discrete move; a held key repeating
+                // isn't a gesture any mode here understands, so ignore the repeats entirely.
                 sendKey(key);
             }
             return true;
