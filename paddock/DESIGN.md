@@ -95,26 +95,40 @@ Idle timers: D returns to N after 20 seconds of no keys. N goes to P after the n
 ### 5.2 D, drive
 
 ```
- D                                                         LAP 18 / 24
- 5:42    (clock shrinks to the top left, circuit hidden entirely - it read as a stray
+ D
+ 4:46    (clock moved to clear the taller dial, circuit hidden entirely - it read as a stray
           leftover shape when just dimmed, Gavin 2026-10-24)
 
                       N E T F L I X
                       STREAMING
 
-          .  .  .  .  .  .  .  .  .  .       <- shallow arc, ticks at each app
-         YT   NF   PR   KD   ...  ALL   SET    <- tick labels under the arc
+      .   .   .   .   .   .   .   .   .      <- deep arc, running off-frame left/right,
+     YT  NF  PR  KD  ...  ALL  SET              ticks at each app, only position numbers
+       01  02  03  04 ...                       under each icon (no text labels, 2026-10-25)
                       |
-                    (needle, a short radial line pointing at the focused tick)
+                    (needle, tapered, overshoots and settles, leaves a brief light
+                     trail along the arc from its old position to its new one)
 ```
 
-- The arc is a very shallow tach sweep along the lower third. Start values: radius 2600, spans plus and minus 20 degrees around vertical. The arc top sits near y 790, ends near y 950. Needle pivot is off screen below. Only the part of the needle between radius R minus 260 and R plus 10 is drawn.
+- Redesigned 2026-10-25 after a 5-advisor council review (Gavin: "bland... needs to be more
+  alive, more responsive, bolder, more clearly car-related"). Original start values (radius
+  2600, +-20 degrees) are kept below for history; current values: radius 1300, spans plus and
+  minus 38 degrees around vertical, bottom of the arc 610px up from the screen bottom. The old
+  geometry wasn't bland because it was small - at radius 2600 the sagitta (how far the arc
+  actually bows) was only ~157px, so it read as a nearly-flat line regardless of canvas size.
+  The rim track is drawn on a wider angle than the ticks sit on and is allowed to bleed past
+  the left/right canvas edges, like a real dial continuing past what's visible.
+  (Original start values, superseded above: radius 2600, +-20 degrees, arc top near y 790,
+  arc bottom near y 950.) Needle pivot is off screen below; only the part of the needle near
+  the visible arc is drawn.
 - A thin `--line` arc traces the track the ticks sit on and the needle sweeps - this is the real path, not decoration, the same idea as the circuit line in N.
 - Positions: up to 9. Favorites in the order set in config, then `ALL` (opens S) then `SET` (opens system settings). `ALL`'s sub label is "Every app on the box", `SET`'s is "System settings" - they didn't explain themselves before (Gavin, 2026-10-24).
-- Each tick has the app's own icon (or a text label if the app has no icon), drawn desaturated white at 45 percent, with a small position number (01-09) under the label in `--text-faint`. The focused one is full color and 1.25x.
+- Each tick has the app's own icon (or a text label if the app has no icon), drawn desaturated white at 45 percent, with a small position number (01-09) under the icon in `--text-faint`. The focused one is full color and 1.22x. Per-tick text labels under each icon (shown pre-2026-10-25) were dropped at the wider geometry - a 2-word app name wrapped to 2 lines and collided with the big focused-app name; the icon plus position number already identifies each tick, like a real gauge.
 - The needle itself is a tapered gauge shape (narrower at the tip), with a small ringed pivot dot where it meets the arc - detail Gavin asked for so Drive mode reads as more of an instrument and less like a plain line (2026-10-24).
 - The focused app's name appears huge above the arc (120px Barlow Condensed semibold caps, with 0.02em tracking). Under it a 28px dim sub label (set in config, optional).
-- Needle motion is a spring with a small overshoot. See section 7.
+- Needle motion overshoots and settles (230ms, not a plain ease) - a needle that overshoots and settles reads as mass on a pivot; one that snaps linearly reads as software (council, 2026-10-25). See section 7.
+- A reactive light trail sweeps the exact angular distance the needle just traveled, firing only on a keypress that actually moves it (not on an end-stop) - two flat-colored strokes (halo + core), no blur/filter, so it's cheap on the WebView the way the engine already has to be (2026-10-25).
+- A keypress that can't move further (already at the first or last tick) gets a small rubber-band nudge of its own instead of silently doing nothing, so it's never confused with a real move (2026-10-25).
 - OK launches. The needle swings a little past the item, the tick and needle flash to `--flash` (white-hot, not red - red is the base color now) for 120ms, the whole screen fades out as the app starts (total under 250ms, never delays the launch).
 
 ### 5.3 S, sport (all apps)
@@ -187,7 +201,7 @@ Keep all content inside 96px left and right, 54px top and bottom. TVs may crop t
 
 | What | How |
 |---|---|
-| Needle move | Spring. Start with stiffness 220, damping 18, mass 1. About 6 to 9 percent overshoot, settled in under 450ms. |
+| Needle move | CSS transition, 230ms, `cubic-bezier(0.34, 1.56, 0.64, 1)` - overshoot and settle, not a plain ease (council, 2026-10-25, see 5.2). A reactive light trail sweeps the traveled angle alongside it; a rubber-band nudge plays instead at either end of the list. |
 | N to D | 420ms. Clock scales to 0.42 and moves top left. Circuit hidden entirely (not dimmed - see 5.2). Arc rises 40px and fades in, ticks stagger in 30ms apart. Photo scrim darkens from 55 to 80 percent. |
 | D to N | Reverse, 320ms. |
 | Launch | Needle overshoots 6 percent, flash to `--flash` for 120ms, fade out 130ms. Launch the intent first, then animate. Never wait for the animation. |
